@@ -117,7 +117,8 @@ public class LogAnomalyDetectionJob {
 
         Dataset<Row> anomaliesOutput = anomalies.withColumn("features", col("features").cast("string"));
         // Запись в файл аномалий
-        anomaliesOutput.write()
+        anomaliesOutput.coalesce(1)
+                .write()
                 .option("header", "true")
                 .csv("C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkService\\result\\anomaly-logdata");
 
