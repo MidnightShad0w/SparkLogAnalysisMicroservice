@@ -18,7 +18,7 @@ public class LogAnomalyDetectionJob {
     public static void main(String[] args) {
 
         if (args.length < 2) {
-            System.err.println("Usage: LogAnomalyDetectionJob C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkService\\data\\logdata.csv C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkService\\model");
+            System.err.println("Usage: LogAnomalyDetectionJob Z:\\Диплом\\SparkLogAnalysisMicroservice\\SparkService\\data\\logdata.csv Z:\\Диплом\\SparkLogAnalysisMicroservice\\SparkService\\model");
             System.exit(1);
         }
         String logDataPath = args[0];
@@ -120,7 +120,7 @@ public class LogAnomalyDetectionJob {
         anomaliesOutput.coalesce(1)
                 .write()
                 .option("header", "true")
-                .csv("C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkService\\result\\anomaly-logdata");
+                .csv("Z:\\Диплом\\SparkLogAnalysisMicroservice\\SparkService\\result\\anomaly-logdata");
 
         System.out.println("Spark UI доступна по адресу http://localhost:4040");
         System.out.println("Нажмите ENTER для завершения программы.");

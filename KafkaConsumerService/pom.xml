@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.danila</groupId>
-    <artifactId>UploadService</artifactId>
+    <artifactId>KafkaConsumerService</artifactId>
     <version>0.0.1</version>
-    <name>UploadService</name>
-    <description>UploadService</description>
+    <name>KafkaConsumerService</name>
+    <description>KafkaConsumerService</description>
     <url/>
     <licenses>
         <license/>
@@ -39,16 +39,6 @@
             <artifactId>spring-kafka</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

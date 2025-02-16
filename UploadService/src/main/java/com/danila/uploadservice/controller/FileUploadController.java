@@ -25,7 +25,7 @@ public class FileUploadController {
         this.kafkaProducerService = kafkaProducerService;
     }
 
-    //curl -X POST -F file=@"C:\Users\admin\Desktop\Диплом\LogAnalysisMicroservice\SparkService\data\partlogdata.csv" http://localhost:8080/upload
+    //curl -X POST -F file=@"Z:\Диплом\SparkLogAnalysisMicroservice\SparkMLModel\data\partlogdata.csv" http://localhost:8080/upload
     @PostMapping
     public ResponseEntity<FileUploadResponse> uploadFile(@RequestParam("file") MultipartFile file) {
         String filePath = fileStorageService.saveFile(file);
