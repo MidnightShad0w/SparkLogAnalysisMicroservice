@@ -26,16 +26,14 @@ public class ObjectStorageService {
             @Value("${cloudru.bucket-name}") String bucketName) {
 
         this.bucketName = bucketName;
-        // Формируем aws_access_key_id в виде tenantId:keyId
         String accessKey = tenantId + ":" + keyId;
         BasicAWSCredentials credentials = new BasicAWSCredentials(accessKey, keySecret);
         ClientConfiguration clientConfig = new ClientConfiguration();
-        // Рекомендуется принудительно использовать подпись V4
         clientConfig.setSignerOverride("AWSS3V4SignerType");
 
         this.s3Client = AmazonS3ClientBuilder.standard()
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(endpoint, region))
-                .withPathStyleAccessEnabled(true) // Обязательно для многих S3-совместимых сервисов
+                .withPathStyleAccessEnabled(true)
                 .withClientConfiguration(clientConfig)
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .build();
