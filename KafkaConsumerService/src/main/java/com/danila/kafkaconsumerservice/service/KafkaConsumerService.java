@@ -1,40 +1,40 @@
 package com.danila.kafkaconsumerservice.service;
 
 import com.danila.kafkaconsumerservice.model.FileUploadMessage;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-
-import java.io.File;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 public class KafkaConsumerService {
-    private final ObjectStorageService objectStorageService;
 
-    @Autowired
-    public KafkaConsumerService(ObjectStorageService objectStorageService) {
-        this.objectStorageService = objectStorageService;
+    @Value("${target.service.url}")
+    private String targetServiceUrl;
+
+    private final RestTemplate restTemplate;
+
+    public KafkaConsumerService() {
+        this.restTemplate = new RestTemplate();
     }
 
     @KafkaListener(topics = "logs.upload", groupId = "upload-group")
     public void listen(FileUploadMessage message) {
         System.out.println("Получено сообщение из Kafka: " + message);
 
-        String localFilePath = message.getFilePath();
-        File fileToUpload = new File(localFilePath);
-
-        if (!fileToUpload.exists()) {
-            System.err.println("Файл не найден: " + localFilePath);
-            return;
-        }
-
-        String key = "uploads/" + fileToUpload.getName();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<FileUploadMessage> request = new HttpEntity<>(message, headers);
 
         try {
-            objectStorageService.uploadFile(key, fileToUpload);
-            System.out.println("Файл успешно загружен в Object Storage с ключом: " + key);
+            ResponseEntity<String> response = restTemplate.postForEntity(targetServiceUrl, request, String.class);
+            System.out.println("POST-запрос отправлен, получен ответ: " + response.getStatusCode());
         } catch (Exception e) {
-            System.err.println("Ошибка загрузки файла в Object Storage: " + e.getMessage());
+            System.err.println("Ошибка при отправке POST-запроса: " + e.getMessage());
         }
     }
 }
