@@ -7,9 +7,10 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="SparkProcessingService" />
         <module name="SparkMLModel" />
       </profile>
-      <profile name="Annotation profile for UploadService" enabled="true">
+      <profile name="Annotation profile for SparkProcessingService" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -28,6 +29,7 @@
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="KafkaConsumerService" options="-parameters" />
+      <module name="SparkProcessingService" options="-parameters" />
       <module name="UploadService" options="-parameters" />
     </option>
   </component>

@@ -1,0 +1,47 @@
+package com.danila.sparkprocessingservice.controller;
+
+import com.danila.sparkprocessingservice.model.FileUploadMessage;
+import com.danila.sparkprocessingservice.service.SparkModelService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/spark/api")
+public class SparkProcessingController {
+
+    private final SparkModelService sparkModelService;
+
+    @Autowired
+    public SparkProcessingController(SparkModelService sparkModelService) {
+        this.sparkModelService = sparkModelService;
+    }
+
+    /**
+     * Предположим, что UploadService или KafkaConsumerService
+     * дергает этот эндпоинт, передавая путь к CSV в s3a
+     * (или, к примеру, содержимое файла).
+     */
+    @PostMapping("/process")
+    public ResponseEntity<String> processCsvFile(@RequestBody FileUploadMessage message) {
+        try {
+            String csvPath = message.getFilePath();
+
+            String modelPath = "s3a://bucket-spark/model/data/part-00000-88d6bf07-38d7-418b-9551-739e9ad9e0e8-c000.snappy.parquet";
+            String resultPath = "s3a://bucket-spark/result-anomaly-logs";
+
+            sparkModelService.processFile(csvPath, modelPath, resultPath);
+
+            return ResponseEntity.ok("Модель успешно применена, результат сохранен в " + resultPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Ошибка при обработке файла: " + e.getMessage());
+        }
+    }
+}
+

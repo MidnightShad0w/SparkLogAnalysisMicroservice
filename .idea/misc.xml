@@ -8,6 +8,7 @@
         <option value="$PROJECT_DIR$/UploadService/pom.xml" />
         <option value="$PROJECT_DIR$/SparkMLModel/pom.xml" />
         <option value="$PROJECT_DIR$/KafkaConsumerService/pom.xml" />
+        <option value="$PROJECT_DIR$/SparkProcessingService/pom.xml" />
       </list>
     </option>
   </component>
