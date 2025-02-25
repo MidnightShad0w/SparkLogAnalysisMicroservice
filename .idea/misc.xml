@@ -9,10 +9,11 @@
         <option value="$PROJECT_DIR$/SparkMLModel/pom.xml" />
         <option value="$PROJECT_DIR$/KafkaConsumerService/pom.xml" />
         <option value="$PROJECT_DIR$/SparkProcessingService/pom.xml" />
+        <option value="$PROJECT_DIR$/spark-shared/pom.xml" />
       </list>
     </option>
   </component>
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" project-jdk-name="openjdk-22" project-jdk-type="JavaSDK">
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" project-jdk-name="temurin-20" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>

@@ -31,7 +31,7 @@ public class SparkProcessingController {
         try {
             String csvPath = message.getFilePath();
 
-            String modelPath = "s3a://bucket-spark/model/data/part-00000-88d6bf07-38d7-418b-9551-739e9ad9e0e8-c000.snappy.parquet";
+            String modelPath = "s3a://bucket-spark/model";
             String resultPath = "s3a://bucket-spark/result-anomaly-logs";
 
             sparkModelService.processFile(csvPath, modelPath, resultPath);

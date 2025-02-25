@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.13</version>
+        <version>2.7.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.danila</groupId>
@@ -30,10 +30,17 @@
     <properties>
         <java.version>8</java.version>
         <spark.version>3.3.2</spark.version>
-        <hadoop.version>3.3.2</hadoop.version>
+        <hadoop.version>3.3.4</hadoop.version>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.danila.shared</groupId>
+            <artifactId>spark-shared</artifactId>
+            <version>1.0.0</version>
+        </dependency>
         <!-- Spring Boot Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -46,7 +53,6 @@
             <artifactId>spark-core_2.12</artifactId>
             <version>${spark.version}</version>
             <exclusions>
-                <!-- Исключаем биндеры SLF4J, потому что Spring Boot берёт logback -->
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
                     <artifactId>log4j-slf4j-impl</artifactId>
@@ -59,10 +65,17 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>reload4j</artifactId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>janino</artifactId>
+                    <groupId>org.codehaus.janino</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>commons-compiler</artifactId>
+                    <groupId>org.codehaus.janino</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 
-        <!-- Spark SQL, MLlib, если нужно -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.12</artifactId>
@@ -80,10 +93,17 @@
                     <groupId>org.slf4j</groupId>
                     <artifactId>reload4j</artifactId>
                 </exclusion>
+                <exclusion>
+                    <artifactId>janino</artifactId>
+                    <groupId>org.codehaus.janino</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>commons-compiler</artifactId>
+                    <groupId>org.codehaus.janino</groupId>
+                </exclusion>
             </exclusions>
         </dependency>
 
-        <!-- Если нужна работа с MinIO / S3 -->
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-aws</artifactId>
@@ -95,7 +115,6 @@
             <version>${hadoop.version}</version>
         </dependency>
 
-        <!-- Мост Log4j2->SLF4J, если хотите чтобы Spark (Log4j2) шёл в SLF4J -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-to-slf4j</artifactId>
@@ -105,16 +124,25 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-mllib_2.12</artifactId>
-            <version>3.3.2</version>
+            <version>${spark.version}</version>
             <scope>compile</scope>
         </dependency>
 
-        <!-- Lombok, тестовые зависимости и т.д. -->
+        <dependency>
+            <artifactId>janino</artifactId>
+            <groupId>org.codehaus.janino</groupId>
+            <version>3.0.8</version>
+        </dependency>
+        <dependency>
+            <artifactId>commons-compiler</artifactId>
+            <groupId>org.codehaus.janino</groupId>
+            <version>3.0.8</version>
+        </dependency>
+
     </dependencies>
 
     <build>
         <plugins>
-            <!-- spring-boot-maven-plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

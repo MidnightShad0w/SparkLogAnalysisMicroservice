@@ -9,8 +9,9 @@
         <outputRelativeToContentRoot value="true" />
         <module name="SparkProcessingService" />
         <module name="SparkMLModel" />
+        <module name="spark-shared" />
       </profile>
-      <profile name="Annotation profile for SparkProcessingService" enabled="true">
+      <profile name="Annotation profile for UploadService" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
