@@ -21,16 +21,10 @@ public class SparkProcessingController {
         this.sparkModelService = sparkModelService;
     }
 
-    /**
-     * Предположим, что UploadService или KafkaConsumerService
-     * дергает этот эндпоинт, передавая путь к CSV в s3a
-     * (или, к примеру, содержимое файла).
-     */
     @PostMapping("/process")
     public ResponseEntity<String> processCsvFile(@RequestBody FileUploadMessage message) {
         try {
             String csvPath = message.getFilePath();
-
             String modelPath = "s3a://bucket-spark/model";
             String resultPath = "s3a://bucket-spark/result-anomaly-logs";
 

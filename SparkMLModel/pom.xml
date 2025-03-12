@@ -63,5 +63,39 @@
       <version>${hadoop.version}</version>
     </dependency>
 
+    <!-- Spark NLP (CPU) -->
+    <dependency>
+      <groupId>com.johnsnowlabs.nlp</groupId>
+      <artifactId>spark-nlp_2.12</artifactId>
+      <version>5.5.3</version>
+    </dependency>
+    <!-- Если используете GPU, вместо spark-nlp_2.12 можно добавить: -->
+<!--    <dependency>-->
+<!--      <groupId>com.johnsnowlabs.nlp</groupId>-->
+<!--      <artifactId>spark-nlp-gpu_2.12</artifactId>-->
+<!--      <version>5.5.3</version>-->
+<!--    </dependency>-->
+
+    <!-- DL4J и ND4J (с использованием CUDA, если требуется) -->
+    <dependency>
+      <groupId>org.deeplearning4j</groupId>
+      <artifactId>deeplearning4j-core</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
+    <!-- Для использования CUDA (убедитесь, что версия CUDA на вашей системе соответствует): -->
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-cuda-11.6-platform</artifactId>
+      <version>1.0.0-M2.1</version>
+    </dependency>
+    <!-- Если хотите использовать CPU (без GPU): -->
+    <!--
+    <dependency>
+      <groupId>org.nd4j</groupId>
+      <artifactId>nd4j-native-platform</artifactId>
+      <version>1.0.0-beta7</version>
+    </dependency>
+    -->
+
   </dependencies>
 </project>
