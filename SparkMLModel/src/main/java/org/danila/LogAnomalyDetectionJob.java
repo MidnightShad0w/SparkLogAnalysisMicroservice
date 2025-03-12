@@ -15,6 +15,7 @@ import org.apache.spark.ml.linalg.Vector;
 import org.apache.spark.ml.linalg.Vectors;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 
@@ -23,8 +24,9 @@ public class LogAnomalyDetectionJob {
     public static void main(String[] args) {
 
         // Входные и выходные пути
-        String logDataPath = "s3a://bucket-spark/fulldata/logdata.csv";
-        String modelSavePath = "s3a://bucket-spark/model";
+        String logDataPath = "C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkMLModel\\data\\logdata.csv";
+        String modelSavePath = "C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkMLModel\\model"; // "s3a://bucket-spark/model"
+        String resultSavePath = "C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkMLModel\\output\\anomaly-logdata";
 
         SparkSession spark = SparkSession.builder()
                 .appName("Log Anomaly Detection Training")
@@ -81,7 +83,7 @@ public class LogAnomalyDetectionJob {
 
         // Сохраняем обученную PipelineModel
         try {
-            pipelineModel.save(modelSavePath);
+            pipelineModel.write().overwrite().save(modelSavePath);
             System.out.println("PipelineModel saved to: " + modelSavePath);
         } catch (Exception e) {
             e.printStackTrace();
@@ -116,8 +118,9 @@ public class LogAnomalyDetectionJob {
         Dataset<Row> anomaliesOutput = anomalies.withColumn("features", col("features").cast("string"));
         anomaliesOutput.coalesce(1)
                 .write()
+                .mode(SaveMode.Overwrite)
                 .option("header", "true")
-                .csv("s3a://bucket-spark/output/anomaly-logdata");
+                .csv(resultSavePath);
 
         System.out.println("Spark UI доступна (если локально) по адресу http://localhost:4040");
         System.out.println("Нажмите ENTER для завершения программы.");
