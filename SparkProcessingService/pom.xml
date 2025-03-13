@@ -36,11 +36,6 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.danila.shared</groupId>
-            <artifactId>spark-shared</artifactId>
-            <version>1.0.0</version>
-        </dependency>
         <!-- Spring Boot Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

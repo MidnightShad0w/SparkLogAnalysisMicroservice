@@ -6,21 +6,18 @@ import com.johnsnowlabs.nlp.annotators.Tokenizer;
 import com.johnsnowlabs.nlp.embeddings.BertEmbeddings;
 import org.apache.spark.ml.*;
 import org.apache.spark.ml.feature.VectorAssembler;
-import org.apache.spark.ml.linalg.Vector;
-import org.apache.spark.ml.linalg.Vectors;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.DataTypes;
 
 import static org.apache.spark.sql.functions.*;
 
-public class LogAnomalyDetectionWithBertAutoencoderJob {
+public class BertAutoencoderJob {
 
     public static void main(String[] args) {
 
         // Пути к данным и сохранению
-        String logDataPath = "C:\\Users\\admin\\Desktop\\logs\\logdata.csv";  // CSV с полями Timestamp,LogLevel,Service,Message,RequestID,User,ClientIP,TimeTaken
-        String modelSavePath = "C:\\Users\\admin\\Desktop\\model\\bert_ae_model";
-        String resultSavePath = "C:\\Users\\admin\\Desktop\\output\\bert_ae_anomalies";
+        String logDataPath = "C:\\Users\\admin\\Desktop\\Diplom\\LogAnalysisMicroservice\\SparkMLModel\\data\\logdata.csv";
+        String modelSavePath = "C:\\Users\\admin\\Desktop\\Diplom\\LogAnalysisMicroservice\\SparkMLModel\\model-ae-bert"; // "s3a://bucket-spark/model"
+        String resultSavePath = "C:\\Users\\admin\\Desktop\\Diplom\\LogAnalysisMicroservice\\SparkMLModel\\output\\anomaly-logdata-ae-bert";
 
         // Создаём SparkSession
         SparkSession spark = SparkSession.builder()
@@ -42,7 +39,7 @@ public class LogAnomalyDetectionWithBertAutoencoderJob {
         // 3. Собираем Pipeline:
 
         // 3.1. Преобразуем TimeTaken (например, "28ms" -> 28.0)
-        TimeTakenConverter timeTakenConverter = new TimeTakenConverter()
+        TimeTakenConverterForBert timeTakenConverterForBert = new TimeTakenConverterForBert()
                 .setInputCol("TimeTaken")
                 .setOutputCol("TimeTakenNumeric");
 
@@ -78,7 +75,7 @@ public class LogAnomalyDetectionWithBertAutoencoderJob {
         // Собираем Pipeline
         Pipeline pipeline = new Pipeline()
                 .setStages(new PipelineStage[]{
-                        timeTakenConverter,
+                        timeTakenConverterForBert,
                         documentAssembler,
                         tokenizer,
                         bertEmbeddings,

@@ -2,7 +2,6 @@ package org.danila;
 
 import static org.apache.spark.sql.functions.*;
 
-import com.danila.shared.TimeTakenConverter;
 import org.apache.spark.ml.Pipeline;
 import org.apache.spark.ml.PipelineModel;
 import org.apache.spark.ml.PipelineStage;
@@ -24,9 +23,9 @@ public class LogAnomalyDetectionJob {
     public static void main(String[] args) {
 
         // Входные и выходные пути
-        String logDataPath = "C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkMLModel\\data\\logdata.csv";
-        String modelSavePath = "C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkMLModel\\model"; // "s3a://bucket-spark/model"
-        String resultSavePath = "C:\\Users\\admin\\Desktop\\Диплом\\LogAnalysisMicroservice\\SparkMLModel\\output\\anomaly-logdata";
+        String logDataPath = "C:\\Users\\admin\\Desktop\\Diplom\\LogAnalysisMicroservice\\SparkMLModel\\data\\logdata.csv";
+        String modelSavePath = "C:\\Users\\admin\\Desktop\\Diplom\\LogAnalysisMicroservice\\SparkMLModel\\model"; // "s3a://bucket-spark/model"
+        String resultSavePath = "C:\\Users\\admin\\Desktop\\Diplom\\LogAnalysisMicroservice\\SparkMLModel\\output\\anomaly-logdata";
 
         SparkSession spark = SparkSession.builder()
                 .appName("Log Anomaly Detection Training")
@@ -44,7 +43,7 @@ public class LogAnomalyDetectionJob {
                 .csv(logDataPath);
 
         // Собираем Pipeline, включающий:
-        // 1. TimeTakenConverter – создаёт столбец "TimeTakenNumeric" из "TimeTaken"
+        // 1. TimeTakenConverterForBert – создаёт столбец "TimeTakenNumeric" из "TimeTaken"
         // 2. StringIndexer для "LogLevel" => "LogLevelIndex"
         // 3. VectorAssembler, который создаёт "features" из "TimeTakenNumeric" и "LogLevelIndex"
         // 4. KMeans для кластеризации

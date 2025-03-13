@@ -18,6 +18,7 @@ import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Adam;
 import org.apache.spark.sql.Encoders;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class AutoEncoder extends Estimator<AutoEncoderModel> {
@@ -43,8 +44,19 @@ public class AutoEncoder extends Estimator<AutoEncoderModel> {
     @Override
     public AutoEncoderModel fit(Dataset<?> dataset) {
 
-        // Считываем вектор признаков
-        List<Vector> vectors = dataset.select(inputCol).as(Encoders.kryo(Vector.class)).collectAsList();
+        // Возьмём только нужный столбец (features)
+        Dataset<Row> onlyFeatures = dataset.select(inputCol);
+
+        // Собираем все строки
+        List<Row> rows = onlyFeatures.collectAsList();
+
+        // Преобразуем к List<Vector>
+        List<Vector> vectors = new ArrayList<>(rows.size());
+        for (Row r : rows) {
+            // getAs(0) или getAs("features")
+            Vector v = r.getAs(0);
+            vectors.add(v);
+        }
         if (vectors.isEmpty()) {
             throw new RuntimeException("Нет данных для обучения автоэнкодера");
         }

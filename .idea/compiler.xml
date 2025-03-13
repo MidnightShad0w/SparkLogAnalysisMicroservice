@@ -9,9 +9,8 @@
         <outputRelativeToContentRoot value="true" />
         <module name="SparkProcessingService" />
         <module name="SparkMLModel" />
-        <module name="spark-shared" />
       </profile>
-      <profile name="Annotation profile for UploadService" enabled="true">
+      <profile name="Annotation profile for KafkaConsumerService" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
@@ -23,6 +22,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="spark-shared" target="1.8" />
       <module name="sparkmlmodel" target="1.8" />
       <module name="SparkService" target="1.8" />
     </bytecodeTargetLevel>
