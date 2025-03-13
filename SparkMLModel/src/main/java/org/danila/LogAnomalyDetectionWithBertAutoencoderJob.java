@@ -1,9 +1,9 @@
 package org.danila;
 
-import com.johnsnowlabs.nlp.base.DocumentAssembler;
-import com.johnsnowlabs.nlp.annotators.tokenizer.Tokenizer;
-import com.johnsnowlabs.nlp.embeddings.BertEmbeddings;
+import com.johnsnowlabs.nlp.DocumentAssembler;
+import com.johnsnowlabs.nlp.annotators.Tokenizer;
 
+import com.johnsnowlabs.nlp.embeddings.BertEmbeddings;
 import org.apache.spark.ml.*;
 import org.apache.spark.ml.feature.VectorAssembler;
 import org.apache.spark.ml.linalg.Vector;
@@ -47,17 +47,18 @@ public class LogAnomalyDetectionWithBertAutoencoderJob {
                 .setOutputCol("TimeTakenNumeric");
 
         // 3.2. NLP: Message -> Document -> Token -> BertEmbeddings -> SentenceEmbeddings
-        DocumentAssembler documentAssembler = new DocumentAssembler()
+        DocumentAssembler documentAssembler = (DocumentAssembler) new DocumentAssembler()
                 .setInputCol("Message")
                 .setOutputCol("document");
 
-        Tokenizer tokenizer = new Tokenizer()
-                .setInputCols(new String[]{"document"})
+        Tokenizer tokenizer = (Tokenizer)((Tokenizer) new Tokenizer()
+                .setInputCols(new String[] {"document"}))
                 .setOutputCol("token");
 
+
         // Подгружаем предобученную BERT-модель "small_bert_L4_128" (можно заменить на другую)
-        BertEmbeddings bertEmbeddings = BertEmbeddings.pretrained("small_bert_L4_128", "en")
-                .setInputCols(new String[]{"document", "token"})
+        BertEmbeddings bertEmbeddings = (BertEmbeddings) ((BertEmbeddings)BertEmbeddings.pretrained("small_bert_L4_128", "en")
+                .setInputCols(new String[]{"document", "token"}))
                 .setOutputCol("embeddings");
 
         SentenceEmbeddingsTransformer sentenceEmbeddings = new SentenceEmbeddingsTransformer()
