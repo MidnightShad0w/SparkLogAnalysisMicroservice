@@ -8,6 +8,7 @@ import org.apache.spark.ml.util.Identifiable;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import org.deeplearning4j.nn.conf.layers.OutputLayer;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.layers.DenseLayer;
@@ -17,6 +18,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 import org.nd4j.linalg.learning.config.Adam;
 import org.apache.spark.sql.Encoders;
+import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,15 +79,17 @@ public class AutoEncoder extends Estimator<AutoEncoderModel> {
                 .weightInit(WeightInit.XAVIER)
                 .updater(new Adam(0.01))
                 .list()
+                // Скрытый слой
                 .layer(0, new DenseLayer.Builder()
                         .nIn(inputDim)
                         .nOut(hiddenDim)
                         .activation(Activation.RELU)
                         .build())
-                .layer(1, new DenseLayer.Builder()
+                // Выходной слой: OutputLayer с MSE
+                .layer(1, new OutputLayer.Builder(LossFunctions.LossFunction.MSE)
+                        .activation(Activation.IDENTITY)  // т.к. автоэнкодер восстанавливает вход
                         .nIn(hiddenDim)
                         .nOut(inputDim)
-                        .activation(Activation.IDENTITY)
                         .build())
                 .build();
 
