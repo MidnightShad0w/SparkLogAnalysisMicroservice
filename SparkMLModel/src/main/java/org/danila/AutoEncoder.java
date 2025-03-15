@@ -4,33 +4,34 @@ import org.apache.spark.ml.Estimator;
 import org.apache.spark.ml.Model;
 import org.apache.spark.ml.linalg.Vector;
 import org.apache.spark.ml.param.ParamMap;
-import org.apache.spark.ml.util.Identifiable;
+import org.apache.spark.ml.util.*;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
-import org.deeplearning4j.nn.conf.layers.OutputLayer;
-import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.layers.DenseLayer;
-import org.deeplearning4j.nn.weights.WeightInit;
-import org.nd4j.linalg.activations.Activation;
-import org.nd4j.linalg.api.ndarray.INDArray;
-import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.learning.config.Adam;
+import org.apache.spark.sql.types.*;
 import org.apache.spark.sql.Encoders;
-import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
+import org.nd4j.linalg.factory.Nd4j;
 
-public class AutoEncoder extends Estimator<AutoEncoderModel> {
+import static org.apache.spark.sql.functions.col;
 
-    private final String uid;
+/**
+ * AutoEncoder - Estimator, который обучает DL4J‑модель (автоэнкодер) на features
+ * и возвращает AutoEncoderModel.
+ *
+ * Реализует MLWritable, чтобы Spark мог сохранить PipelineModel,
+ * но фактическую DL4J‑модель сериализуем в AutoEncoderModel.
+ */
+public class AutoEncoder extends Estimator<AutoEncoderModel>
+        implements MLWritable {
+
+    private String uid;
     private String inputCol;
     private String outputCol;
 
     public AutoEncoder() {
-        this.uid = Identifiable.randomUID("autoEncoder");
+        this.uid = Identifiable.randomUID("org.danila.AutoEncoder");
     }
 
     public AutoEncoder setInputCol(String inputCol) {
@@ -45,80 +46,138 @@ public class AutoEncoder extends Estimator<AutoEncoderModel> {
 
     @Override
     public AutoEncoderModel fit(Dataset<?> dataset) {
-
-        // Возьмём только нужный столбец (features)
-        Dataset<Row> onlyFeatures = dataset.select(inputCol);
-
-        // Собираем все строки
-        List<Row> rows = onlyFeatures.collectAsList();
-
-        // Преобразуем к List<Vector>
-        List<Vector> vectors = new ArrayList<>(rows.size());
+        // 1) Считываем features => List<Vector>
+        // (Сериализовать VectorUDT через collectAsList)
+        List<Row> rows = dataset.select(col(inputCol)).collectAsList();
+        List<org.apache.spark.ml.linalg.Vector> vectors = new ArrayList<>(rows.size());
         for (Row r : rows) {
-            // getAs(0) или getAs("features")
-            Vector v = r.getAs(0);
+            // Предполагаем, что столбец уже имеет тип Vector (VectorUDT)
+            org.apache.spark.ml.linalg.Vector v = r.getAs(0);
             vectors.add(v);
         }
+
         if (vectors.isEmpty()) {
             throw new RuntimeException("Нет данных для обучения автоэнкодера");
         }
 
         int inputDim = vectors.get(0).size();
-        int hiddenDim = Math.max(1, inputDim / 2); // Простейший вариант - половина входной размерности
+        int hiddenDim = Math.max(1, inputDim / 2);
         int n = vectors.size();
 
         double[][] data = new double[n][inputDim];
         for (int i = 0; i < n; i++) {
             data[i] = vectors.get(i).toArray();
         }
-        INDArray inputData = Nd4j.create(data);
+        org.nd4j.linalg.api.ndarray.INDArray inputData = Nd4j.create(data);
 
-        // Простейшая архитектура автоэнкодера: вход -> (Dense, ReLU) -> (Dense, Identity) -> выход
-        org.deeplearning4j.nn.conf.MultiLayerConfiguration conf = new NeuralNetConfiguration.Builder()
-                .seed(123)
-                .weightInit(WeightInit.XAVIER)
-                .updater(new Adam(0.01))
-                .list()
-                // Скрытый слой
-                .layer(0, new DenseLayer.Builder()
-                        .nIn(inputDim)
-                        .nOut(hiddenDim)
-                        .activation(Activation.RELU)
-                        .build())
-                // Выходной слой: OutputLayer с MSE
-                .layer(1, new OutputLayer.Builder(LossFunctions.LossFunction.MSE)
-                        .activation(Activation.IDENTITY)  // т.к. автоэнкодер восстанавливает вход
-                        .nIn(hiddenDim)
-                        .nOut(inputDim)
-                        .build())
-                .build();
+        // 2) Создаём DL4J‑конфигурацию (пример)
+        // OutputLayer с MSE
+        org.deeplearning4j.nn.conf.MultiLayerConfiguration conf =
+                new org.deeplearning4j.nn.conf.NeuralNetConfiguration.Builder()
+                        .seed(123)
+                        .list()
+                        .layer(0, new org.deeplearning4j.nn.conf.layers.DenseLayer.Builder()
+                                .nIn(inputDim)
+                                .nOut(hiddenDim)
+                                .activation(org.nd4j.linalg.activations.Activation.RELU)
+                                .build())
+                        .layer(1, new org.deeplearning4j.nn.conf.layers.OutputLayer.Builder(
+                                org.nd4j.linalg.lossfunctions.LossFunctions.LossFunction.MSE)
+                                .nIn(hiddenDim)
+                                .nOut(inputDim)
+                                .activation(org.nd4j.linalg.activations.Activation.IDENTITY)
+                                .build())
+                        .build();
 
-        MultiLayerNetwork model = new MultiLayerNetwork(conf);
-        model.init();
+        org.deeplearning4j.nn.multilayer.MultiLayerNetwork net =
+                new org.deeplearning4j.nn.multilayer.MultiLayerNetwork(conf);
+        net.init();
 
-        // Обучаем модель, например, 10 эпох
-        int nEpochs = 10;
+        // 3) Обучаем
+        int nEpochs = 5;
         for (int epoch = 0; epoch < nEpochs; epoch++) {
-            model.fit(inputData, inputData);
-            System.out.println("Epoch " + (epoch + 1) + " completed.");
+            net.fit(inputData, inputData);
+            System.out.println("Epoch " + (epoch+1) + " done");
         }
 
-        return new AutoEncoderModel(model, inputCol, outputCol);
+        // 4) Создаём AutoEncoderModel, передаём DL4J‑модель
+        AutoEncoderModel model = new AutoEncoderModel(uid, net, inputCol, outputCol, "");
+        return model;
     }
 
     @Override
     public StructType transformSchema(StructType schema) {
-        // Добавляем новый столбец outputCol (Double), в котором будет храниться ошибка реконструкции
+        // Добавляем столбец outputCol (Double), в котором хранится ошибка
         return schema.add(outputCol, DataTypes.DoubleType, false);
     }
 
     @Override
     public AutoEncoder copy(ParamMap extra) {
-        return defaultCopy(extra);
+        AutoEncoder copy = new AutoEncoder();
+        copy.setInputCol(this.inputCol);
+        copy.setOutputCol(this.outputCol);
+        copy.uid = this.uid;
+        return copy;
     }
 
     @Override
     public String uid() {
         return uid;
+    }
+
+    // ===== MLWritable =====
+    @Override
+    public MLWriter write() {
+        return new AutoEncoderWriter(this);
+    }
+
+    private static class AutoEncoderWriter extends MLWriter {
+        private final AutoEncoder instance;
+        AutoEncoderWriter(AutoEncoder instance) {
+            this.instance = instance;
+        }
+
+        @Override
+        public void saveImpl(String path) {
+            try {
+                DefaultParamsWriter.saveMetadata(instance, path, sc(), scala.Option.empty(), scala.Option.empty());
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            String extraJson = "{ \"inputCol\":\"" + instance.inputCol + "\", " +
+                    "\"outputCol\":\"" + instance.outputCol + "\" }";
+            String extraPath = path + "/autoEncoderParams";
+            TimeTakenConverterForBert.saveJsonToFile(extraJson, extraPath);
+        }
+    }
+
+    // ====== MLReadable ======
+    public static MLReader<AutoEncoder> read() {
+        return new AutoEncoderReader();
+    }
+
+    public static AutoEncoder load(String path) {
+        return (AutoEncoder) read().load(path);
+    }
+
+    private static class AutoEncoderReader extends MLReader<AutoEncoder> {
+        @Override
+        public AutoEncoder load(String path) {
+            try {
+                DefaultParamsReader.Metadata metadata = DefaultParamsReader.loadMetadata(path, sc(), "org.danila.AutoEncoder");
+                String extraPath = path + "/autoEncoderParams";
+                String extraJson = TimeTakenConverterForBert.readJsonFile(extraPath);
+
+                AutoEncoder instance = new AutoEncoder();
+                instance.uid = metadata.uid();
+                String inputColValue = TimeTakenConverterForBert.parseJsonField(extraJson, "inputCol");
+                String outputColValue = TimeTakenConverterForBert.parseJsonField(extraJson, "outputCol");
+                instance.setInputCol(inputColValue);
+                instance.setOutputCol(outputColValue);
+                return instance;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }
