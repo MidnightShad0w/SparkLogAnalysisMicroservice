@@ -46,7 +46,7 @@ services:
       mc cp --recursive /model/* myminio/bucket-spark/model/ || echo 'File copy failed';
       "
     volumes:
-      - "/c/Users/admin/Desktop/Диплом/LogAnalysisMicroservice/SparkMLModel/model:/model" # локальная папка с моделью
+      - "/c/Users/admin/Desktop/Diplom/LogAnalysisMicroservice/SparkMLModel/model:/model" # локальная папка с моделью
     restart: "no"
 
 volumes:
