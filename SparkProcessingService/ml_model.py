@@ -32,15 +32,14 @@ class BertEncoder:
 
         with torch.no_grad():
             outputs = self.model(**inputs)
-            last_hidden = outputs.last_hidden_state  # (batch, seq_len, hidden_dim)
-            # Берём среднее по seq_len:
+            last_hidden = outputs.last_hidden_state
             embeddings = torch.mean(last_hidden, dim=1)
         return embeddings
 
 
 class AutoEncoder(nn.Module):
     """
-    Простой MLP-автоэнкодер (768 -> 64 -> 768), как в вашем примере.
+    Простой MLP-автоэнкодер (768 -> 64 -> 768).
     """
 
     def __init__(self, input_dim=768, hidden_dim=256):
@@ -78,11 +77,9 @@ def train_autoencoder(
     optimizer = optim.Adam(autoencoder.parameters(), lr=lr)
     loss_fn = nn.MSELoss()
 
-    # Чтобы не вызывать get_embeddings для каждой строки, будем обрабатывать батчами.
     autoencoder.train()
     n = len(texts)
     for epoch in range(num_epochs):
-        # Перемешиваем индексы:
         indices = np.random.permutation(n)
         total_loss = 0.0
         count = 0
@@ -91,8 +88,7 @@ def train_autoencoder(
             batch_idx = indices[i:i + batch_size]
             batch_texts = [texts[j] for j in batch_idx]
 
-            # Генерируем BERT-эмбеддинги
-            emb = bert_encoder.get_embeddings(batch_texts)  # shape: (B, 768)
+            emb = bert_encoder.get_embeddings(batch_texts)
             emb = emb.to(device)
 
             optimizer.zero_grad()
@@ -129,7 +125,6 @@ def compute_reconstruction_errors(
             batch_texts = texts[i:i + batch_size]
             emb = bert_encoder.get_embeddings(batch_texts).to(device)
             recon = autoencoder(emb)
-            # построчно MSE
             mse_batch = torch.mean((recon - emb) ** 2, dim=1).cpu().numpy()
             errors[idx:idx + len(mse_batch)] = mse_batch
             idx += len(mse_batch)

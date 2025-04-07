@@ -9,10 +9,6 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.danila.kafkaconsumerservice.model.FileUploadMessage;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -47,14 +43,10 @@ public class KafkaConsumerService {
 
     @PostConstruct
     public void initS3Client() {
-        // Создаем учетные данные
         BasicAWSCredentials credentials = new BasicAWSCredentials(minioAccessKey, minioSecretKey);
-        // Создаем конфигурацию клиента
         ClientConfiguration clientConfig = new ClientConfiguration();
-        // Указываем использовать S3V4 подписывание
         clientConfig.setSignerOverride("AWSS3V4SignerType");
 
-        // Инициализируем s3Client с настройками для MinIO
         s3Client = AmazonS3ClientBuilder.standard()
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(minioEndpoint, "us-east-1"))
                 .withPathStyleAccessEnabled(true)
@@ -66,17 +58,6 @@ public class KafkaConsumerService {
     @KafkaListener(topics = "logs.upload", groupId = "upload-group")
     public void listen(FileUploadMessage message) {
         System.out.println("Получено сообщение из Kafka: " + message);
-
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.APPLICATION_JSON);
-//        HttpEntity<FileUploadMessage> request = new HttpEntity<>(message, headers);
-//
-//        try {
-//            ResponseEntity<String> response = restTemplate.postForEntity(targetServiceUrl, request, String.class);
-//            System.out.println("POST-запрос отправлен, получен ответ: " + response.getStatusCode());
-//        } catch (Exception e) {
-//            System.err.println("Ошибка при отправке POST-запроса: " + e.getMessage());
-//        }
         try {
             File localFile = new File(message.getFilePath());
             String key = "uploads/" + localFile.getName();
