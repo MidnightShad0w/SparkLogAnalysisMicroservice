@@ -47,9 +47,9 @@ def combine_fields_for_bert(loglevel, service, message, timestr=None):
 
 
 def main():
-    logDataPath = r"C:\Users\admin\Desktop\Diplom\SparkProcessingService\data\partlogdata1.csv"
-    modelSaveDir = r"C:\Users\admin\Desktop\Diplom\SparkProcessingService\model"
-    anomaliesSavePath = r"C:\Users\admin\Desktop\Diplom\SparkProcessingService\output\anomaly-logdata"
+    logDataPath = r"Z:\Diplom\SparkLogAnalysisMicroservice\SparkProcessingService\data\logdata.csv"
+    modelSaveDir = r"Z:\Diplom\SparkLogAnalysisMicroservice\SparkProcessingService\model"
+    anomaliesSavePath = r"Z:\Diplom\SparkLogAnalysisMicroservice\SparkProcessingService\anomaly-logdata"
 
     spark = SparkSession.builder \
         .appName("LogAnomalyDetectionBERT") \
@@ -74,6 +74,10 @@ def main():
                 "--add-exports=java.base/java.nio=ALL-UNNAMED " +
                 "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED " +
                 "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED") \
+        .config("spark.sql.execution.arrow.pyspark.enabled", "false") \
+        .config("spark.executor.memory", "4g") \
+        .config("spark.driver.memory", "4g") \
+        .config("spark.local.dir", "Z:\\Diplom\\SparkLogAnalysisMicroservice\\SparkProcessingService\\temp\\spark") \
         .getOrCreate()
 
     print(spark.version)
@@ -110,7 +114,7 @@ def main():
         for r in train_rows
     ]
 
-    device = "cpu"
+    device = "cuda"
     bert_encoder = BertEncoder(device=device)
     autoencoder = AutoEncoder().to(device)
 

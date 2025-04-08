@@ -2,10 +2,7 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, monotonically_increasing_id
 import boto3
 from botocore.client import Config
-import numpy as np
-import pandas as pd
 import torch
-import os
 
 from ml_model import BertEncoder, AutoEncoder, compute_reconstruction_errors
 
@@ -72,7 +69,7 @@ class SparkModelService:
         self.s3_client.download_file(bucket_name, "model/autoencoder.pt", model_local_path)
         self.s3_client.download_file(bucket_name, "model/threshold.txt", threshold_local_path)
 
-        self.device = "cpu"
+        self.device = "cuda"
         self.bert_encoder = BertEncoder(device=self.device)
 
         self.autoencoder = AutoEncoder()

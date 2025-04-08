@@ -11,7 +11,7 @@ class BertEncoder:
     По умолчанию берём 'bert-base-uncased' c выходом ~768.
     """
 
-    def __init__(self, model_name='bert-base-uncased', device='cpu'):
+    def __init__(self, model_name='bert-base-uncased', device='cuda'):
         self.device = device
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModel.from_pretrained(model_name).to(self.device)
@@ -69,7 +69,7 @@ def train_autoencoder(
         num_epochs=3,
         batch_size=32,
         lr=1e-4,
-        device='cpu'
+        device='cuda'
 ):
     """
     Тренируем автоэнкодер на эмбеддингах, вычисляемых для списка texts (строк).
@@ -108,7 +108,7 @@ def compute_reconstruction_errors(
         texts,
         bert_encoder,
         autoencoder,
-        device='cpu',
+        device='cuda',
         batch_size=32
 ):
     """
@@ -125,7 +125,7 @@ def compute_reconstruction_errors(
             batch_texts = texts[i:i + batch_size]
             emb = bert_encoder.get_embeddings(batch_texts).to(device)
             recon = autoencoder(emb)
-            mse_batch = torch.mean((recon - emb) ** 2, dim=1).cpu().numpy()
+            mse_batch = torch.mean((recon - emb) ** 2, dim=1).cpu().numpy() # instead .cpu use .cuda when all is "cpu"
             errors[idx:idx + len(mse_batch)] = mse_batch
             idx += len(mse_batch)
 
