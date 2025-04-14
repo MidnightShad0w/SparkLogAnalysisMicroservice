@@ -1,3 +1,6 @@
+import time
+import uuid
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, monotonically_increasing_id
 import boto3
@@ -101,6 +104,9 @@ class SparkModelService:
           7) записываем => csv
           8) удаляем исходные файлы
         """
+        run_id = str(uuid.uuid4())  # или берем из параметров, или timestamp
+        start_time = time.time()
+
         print("Путь к входному файлу:", csv_path)
 
         try:
@@ -147,6 +153,8 @@ class SparkModelService:
             print("Нет данных для обработки (нет Message).")
             return
 
+        total_logs = len(rows)
+
         # combine fields exactly like in training
         def combine_fields_for_bert_py(loglevel, service, message, timestr=None):
             if timestr is not None:
@@ -192,6 +200,7 @@ class SparkModelService:
 
         anomalies_df = joined_df.filter(col("recon_error") > threshold)
         count_anom = anomalies_df.count()
+        print(f"Found {total_logs} total logs.")
         print(f"Found {count_anom} anomalies in test set.")
         anomalies_df.show(10, False)
 
@@ -203,8 +212,23 @@ class SparkModelService:
             .csv(result_path)
 
         print(f"Результаты сохранены в: {result_path}")
-
         self.delete_processed_files(prefix="uploads/")
+        # ========== Отправка метрик ==========
+        end_time = time.time()
+        duration_sec = end_time - start_time
+
+        if total_logs > 0:
+            anomalies_ratio = float(count_anom) / float(total_logs)
+        else:
+            anomalies_ratio = 0.0
+
+        from src.utils.clickhouse_metrics import send_metric
+        send_metric(run_id, "SparkProcess", "total_logs", float(total_logs))
+        send_metric(run_id, "SparkProcess", "anomalies_count", float(count_anom))
+        send_metric(run_id, "SparkProcess", "anomalies_ratio", anomalies_ratio)
+        send_metric(run_id, "SparkProcess", "duration_sec", duration_sec)
+        # =====================================
+        print(f"Данные отправлены в clickhouse, anomalies_ratio: {anomalies_ratio}")
 
     def ensure_folder_exists(self, folder_key: str):
         """

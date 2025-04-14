@@ -1,4 +1,27 @@
 services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:22.8
+    container_name: clickhouse
+    ports:
+      - "8123:8123"  # HTTP интерфейс
+      - "9003:9000"  # TCP интерфейс
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+    environment:
+      CLICKHOUSE_DB: logs
+      CLICKHOUSE_USER: default
+      CLICKHOUSE_PASSWORD: ""
+
+  grafana:
+    image: grafana/grafana:9.3.6
+    container_name: grafana
+    environment:
+      - GF_INSTALL_PLUGINS=vertamedia-clickhouse-datasource
+    ports:
+      - "3000:3000"
+    depends_on:
+      - clickhouse
+
   zookeeper:
     image: confluentinc/cp-zookeeper:7.2.1
     environment:
@@ -51,3 +74,4 @@ services:
 
 volumes:
   minio-data:
+  clickhouse_data:
