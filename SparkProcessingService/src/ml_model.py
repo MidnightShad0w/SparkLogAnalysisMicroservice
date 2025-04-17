@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+import matplotlib.pyplot as plt
 from transformers import AutoTokenizer, AutoModel
 
 
@@ -78,10 +79,13 @@ def train_autoencoder(
 
     autoencoder.train()
     n = len(texts)
+    mse_history = []
+    p90_hist, p95_hist = [], []
     for epoch in range(num_epochs):
         indices = np.random.permutation(n)
         total_loss = 0.0
         count = 0
+        epoch_errors = []
 
         for i in range(0, n, batch_size):
             batch_idx = indices[i:i + batch_size]
@@ -98,9 +102,31 @@ def train_autoencoder(
 
             total_loss += loss.item() * emb.size(0)
             count += emb.size(0)
+            loss_batch = ((outputs - emb) ** 2).mean(dim=1).detach().cpu().numpy()
+            epoch_errors.extend(loss_batch)
 
+        p90_hist.append(np.percentile(epoch_errors, 90))
+        p95_hist.append(np.percentile(epoch_errors, 95))
         avg_loss = total_loss / count
+        mse_history.append(avg_loss)
         print(f"Epoch [{epoch + 1}/{num_epochs}] Loss: {avg_loss:.4f}")
+
+    epochs = list(range(1, num_epochs + 1))
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(epochs, mse_history, marker='o')
+    plt.xlabel("Epoch")
+    plt.ylabel("Average MSE")
+    plt.title("AutoEncoder training curve")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+    plt.figure(figsize=(6, 4))
+    plt.plot(epochs, p90_hist, label='90th percentile')
+    plt.plot(epochs, p95_hist, label='95th percentile')
+    plt.xlabel("Epoch"), plt.ylabel("MSE"), plt.legend(), plt.grid(True), plt.tight_layout()
+    plt.show()
 
 
 def compute_reconstruction_errors(

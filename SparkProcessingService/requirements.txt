@@ -6,3 +6,4 @@ boto3==1.37.29
 pyspark==3.3.2
 botocore==1.37.29
 clickhouse-driver
+matplotlib==3.9.4
