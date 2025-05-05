@@ -48,4 +48,4 @@ docker-compose up -d
 docker-compose run --rm airflow-webserver airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email <your_email>
 ```
 
-Now you have Airflow UI at [http://localhost:8080](http://localhost:8080), Minio storage at [http://localhost:9000](http://localhost:9000), Grafana UI at [http://localhost:3000](http://localhost:3000).
+Now you have Airflow UI at [http://localhost:8080](http://localhost:8080), Minio storage at [http://localhost:9000](http://localhost:9000) (with credentials: minioadmin, minioadmin), Grafana UI at [http://localhost:3000](http://localhost:3000).

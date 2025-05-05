@@ -104,7 +104,7 @@ class SparkModelService:
           7) записываем => csv
           8) удаляем исходные файлы
         """
-        run_id = str(uuid.uuid4())  # или берем из параметров, или timestamp
+        run_id = str(uuid.uuid4())
         start_time = time.time()
 
         print("Путь к входному файлу:", csv_path)
@@ -155,7 +155,6 @@ class SparkModelService:
 
         total_logs = len(rows)
 
-        # combine fields exactly like in training
         def combine_fields_for_bert_py(loglevel, service, message, timestr=None):
             if timestr is not None:
                 return f"LOGLEVEL={loglevel} SERVICE={service} TIME={timestr} TEXT={message}"
@@ -166,7 +165,6 @@ class SparkModelService:
         texts_for_inference = []
         for r in rows:
             rid = r["row_id"]
-            # строка как при обучении
             combined = combine_fields_for_bert_py(
                 r["LogLevel"],
                 r["Service"],
@@ -176,6 +174,7 @@ class SparkModelService:
             row_ids.append(rid)
             texts_for_inference.append(combined)
 
+        t0_detect = time.perf_counter()
         errors = compute_reconstruction_errors(
             texts=texts_for_inference,
             bert_encoder=self.bert_encoder,
@@ -199,6 +198,8 @@ class SparkModelService:
         joined_df = df_with_id.join(error_df, on="row_id", how="inner")
 
         anomalies_df = joined_df.filter(col("recon_error") > threshold)
+        t1_detect = time.perf_counter()
+        detect_time_sec = t1_detect - t0_detect
         count_anom = anomalies_df.count()
         print(f"Found {total_logs} total logs.")
         print(f"Found {count_anom} anomalies in test set.")
@@ -227,8 +228,10 @@ class SparkModelService:
         send_metric(run_id, "SparkProcess", "anomalies_count", float(count_anom))
         send_metric(run_id, "SparkProcess", "anomalies_ratio", anomalies_ratio)
         send_metric(run_id, "SparkProcess", "duration_sec", duration_sec)
+        send_metric(run_id, "SparkProcess", "detect_sec", detect_time_sec)
         # =====================================
         print(f"Данные отправлены в clickhouse, anomalies_ratio: {anomalies_ratio}")
+        print(f"[{run_id}]  detect={detect_time_sec:0.2f}s ")
 
     def ensure_folder_exists(self, folder_key: str):
         """
