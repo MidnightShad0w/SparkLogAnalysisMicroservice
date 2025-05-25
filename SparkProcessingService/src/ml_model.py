@@ -7,10 +7,6 @@ from transformers import AutoTokenizer, AutoModel
 
 
 class BertEncoder:
-    """
-    Класс-обёртка, извлекающий эмбеддинги (pooler_output или скрытые состояния) из BERT.
-    По умолчанию берём 'bert-base-uncased' c выходом ~768.
-    """
     def __init__(self, model_name='bert-base-uncased', device='cuda'):
         self.device = device
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -18,10 +14,6 @@ class BertEncoder:
         self.model.eval()
 
     def get_embeddings(self, texts, max_length=128):
-        """
-        Возвращает тензор эмбеддингов (batch_size, 768).
-        Усредняем last_hidden_state по всем токенам.
-        """
         inputs = self.tokenizer(
             texts,
             padding=True,
@@ -38,10 +30,6 @@ class BertEncoder:
 
 
 class AutoEncoder(nn.Module):
-    """
-    Простой MLP-автоэнкодер (768 -> 64 -> 768).
-    """
-
     def __init__(self, input_dim=768, hidden_dim=256):
         super(AutoEncoder, self).__init__()
         self.encoder = nn.Sequential(
@@ -71,9 +59,6 @@ def train_autoencoder(
         lr=1e-4,
         device='cuda'
 ):
-    """
-    Тренируем автоэнкодер на эмбеддингах, вычисляемых для списка texts (строк).
-    """
     optimizer = optim.Adam(autoencoder.parameters(), lr=lr)
     loss_fn = nn.MSELoss()
 
@@ -136,10 +121,6 @@ def compute_reconstruction_errors(
         device='cuda',
         batch_size=32
 ):
-    """
-    Считает ошибку реконструкции (MSE) для каждой строки из texts.
-    Возвращает numpy-массив ошибок.
-    """
     autoencoder.eval()
     n = len(texts)
     errors = np.zeros(n, dtype=np.float32)
