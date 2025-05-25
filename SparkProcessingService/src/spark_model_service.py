@@ -93,17 +93,6 @@ class SparkModelService:
         print(">>> AutoEncoder и threshold загружены из MinIO.")
 
     def process_file(self, csv_path: str, model_path: str, result_path: str):
-        """
-        Аналог "теста" в train_script.py:
-          1) читаем CSV
-          2) если есть _c0, убираем
-          3) добавляем row_id
-          4) collect() -> (row_id, Message)
-          5) compute recon_error для каждого
-          6) Spark DF => join => filter
-          7) записываем => csv
-          8) удаляем исходные файлы
-        """
         run_id = str(uuid.uuid4())
         start_time = time.time()
 
@@ -234,18 +223,12 @@ class SparkModelService:
         print(f"[{run_id}]  detect={detect_time_sec:0.2f}s ")
 
     def ensure_folder_exists(self, folder_key: str):
-        """
-        Аналог создания "виртуальной папки" в MinIO (S3).
-        """
         resp = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=folder_key)
         if "Contents" not in resp:
             self.s3_client.put_object(Bucket=self.bucket_name, Key=folder_key, Body=b"")
             print(f"Создана виртуальная папка: {folder_key}")
 
     def delete_processed_files(self, prefix="uploads/"):
-        """
-        Удаляем все файлы в заданном префиксе (uploads/).
-        """
         try:
             resp = self.s3_client.list_objects_v2(Bucket=self.bucket_name, Prefix=prefix)
             if "Contents" in resp:
